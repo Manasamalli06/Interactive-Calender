@@ -113,6 +113,15 @@ export default function CalendarApp() {
     return () => clearInterval(id)
   }, [])
 
+  const [booms, setBooms] = useState({})
+
+  const triggerBoom = useCallback((id) => {
+    setBooms(prev => ({ ...prev, [id]: true }))
+    setTimeout(() => {
+      setBooms(prev => ({ ...prev, [id]: false }))
+    }, 600)
+  }, [])
+
   useEffect(() => {
     try {
       const d = localStorage.getItem('chronos-memos')
@@ -214,7 +223,11 @@ export default function CalendarApp() {
             </header>
             <div className="overview-grid">
               {MONTH_NAMES.map((m, i) => (
-                <div key={m} className={`overview-month-card ${viewMonth === i ? 'current' : ''}`} onClick={() => { setViewMonth(i); setActiveNav('planning') }}>
+                <div key={m} className={`overview-month-card ${viewMonth === i ? 'current' : ''} ${booms[`overview-${i}`] ? 'booming' : ''}`} 
+                  onClick={(e) => { 
+                    triggerBoom(`overview-${i}`);
+                    setTimeout(() => { setViewMonth(i); setActiveNav('planning') }, 150);
+                  }}>
                   <div className="month-card-img">
                     <Image src={HERO_IMAGES[i]} alt={m} fill style={{ objectFit: 'cover' }} sizes="300px" />
                     <div className="month-card-overlay"><span>{m.toUpperCase()}</span></div>
@@ -237,8 +250,10 @@ export default function CalendarApp() {
               <p className="view-subtitle">{MONTH_NAMES[viewMonth]} {viewYear} Planning & Scheduling</p>
             </header>
 
-            <section className="hero-section">
-              <Image src={HERO_IMAGES[viewMonth]} alt="Hero" fill style={{ objectFit: 'cover' }} priority sizes="80vw" />
+            <section className={`hero-section ${booms['hero'] ? 'booming' : ''}`} key={`hero-${viewMonth}`} onClick={() => triggerBoom('hero')}>
+              <div className="image-reveal-wrapper">
+                <Image src={HERO_IMAGES[viewMonth]} alt="Hero" fill style={{ objectFit: 'cover' }} priority sizes="80vw" className="hero-img" />
+              </div>
               <div className="hero-overlay" /><div className="hero-content">
                 <h1 className="hero-month">{MONTH_NAMES[viewMonth]}</h1>
                 <p className="hero-year">{viewYear}</p>
@@ -330,8 +345,12 @@ export default function CalendarApp() {
               <h1 className="mood-big-word">{FOCUS_WORDS[viewMonth]}</h1>
               <p className="view-subtitle">{MONTH_NAMES[viewMonth]} Visual Direction</p>
             </header>
-            <div className="mood-board">
-              <div className="mood-main-img"><Image src={HERO_IMAGES[viewMonth]} alt="Primary Mood" fill style={{ objectFit: 'cover' }} /></div>
+            <div className={`mood-board ${booms['mood'] ? 'booming' : ''}`} key={`mood-${viewMonth}`} onClick={() => triggerBoom('mood')}>
+              <div className="mood-main-img">
+                <div className="image-reveal-wrapper">
+                  <Image src={HERO_IMAGES[viewMonth]} alt="Primary Mood" fill style={{ objectFit: 'cover' }} className="hero-img" />
+                </div>
+              </div>
               <div className="mood-color-palette">
                 <div className="palette-strip" style={{ background: 'var(--primary)' }}><span>#0052FF</span></div>
                 <div className="palette-strip" style={{ background: '#F0F4FF' }}><span style={{ color: 'var(--primary)' }}>#F0F4FF</span></div>
@@ -383,8 +402,8 @@ export default function CalendarApp() {
             </div>
             <p className="modal-subtitle">Add to {MONTH_NAMES[viewMonth]} {viewYear}</p>
             <div className="modal-form">
-              <label className="modal-label">Label</label>
-              <input className="modal-input" value={formLabel} onChange={e => setFormLabel(e.target.value)} autoFocus placeholder="e.g. Strategy" />
+              <label className="modal-label">Date</label>
+              <input className="modal-input" value={formLabel} onChange={e => setFormLabel(e.target.value)} autoFocus placeholder="e.g. October 15" />
               <label className="modal-label">Note</label>
               <textarea className="modal-textarea" value={formText} onChange={e => setFormText(e.target.value)} placeholder="Write here..." />
               <div className="modal-actions">
